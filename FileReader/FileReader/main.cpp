@@ -23,6 +23,17 @@ int sysAllocGranu;
 
 int fileLen;
 
+struct IntLowHigh
+{
+	DWORD low;
+	DWORD high;
+};
+union BigInteger
+{
+	__int64 big;
+	IntLowHigh offset;
+};
+
 void CUpdateDialog(HWND hwnd)
 {
 	SetDlgItemInt(hwnd, IDC_EDIT1, nowIndex, FALSE);
@@ -49,9 +60,10 @@ void ReadFile(int index)
 		UnmapViewOfFile(nowFileStr);
 	}
 
-	__int64 loc = index;
-	loc -= 1;
-	loc *= sysAllocGranu;
+	BigInteger loc;
+	loc.big = index;
+	loc.big -= 1;
+	loc.big *= sysAllocGranu;
 
 	int readSize = sysAllocGranu;
 	if (index == maxIndex)
@@ -59,7 +71,7 @@ void ReadFile(int index)
 		readSize = fileLen % sysAllocGranu;
 	}
 
-	nowFileStr = (wchar_t*) MapViewOfFile(fileMap, FILE_MAP_READ | FILE_MAP_WRITE, 0, loc, readSize);
+	nowFileStr = (wchar_t*) MapViewOfFile(fileMap, FILE_MAP_READ | FILE_MAP_WRITE, loc.offset.high, loc.offset.low, readSize);
 
 	if (nowFileStr == NULL)
 	{
